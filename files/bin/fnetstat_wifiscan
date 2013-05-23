@@ -1,0 +1,51 @@
+#!/bin/sh
+# Update from Wermelskirchen by RubenKelevra 2012-2013 - cyrond@gmail.com
+# Lizenz: GPL
+
+MESH_INTERFACE="br-freifunk"
+ADHOC_INTERFACE="wlan0-1"
+CLIENT_INTERFACE="wlan0"
+BRCTL="/bin/brctl_ff"
+
+echo "{"
+
+echo "\"sys:script\": \"v0.5\","
+echo "\"type\": \"wifiscan\","
+
+iw dev $CLIENT_INTERFACE scan freq 2412 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2417 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2422 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2427 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2432 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2437 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2442 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2447 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2452 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2457 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2462 > /dev/null
+
+iw dev $CLIENT_INTERFACE scan freq 2412 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2417 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2422 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2427 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2432 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2437 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2442 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2447 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2452 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2457 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2462 > /dev/null
+
+iw dev $CLIENT_INTERFACE scan freq 2412 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2417 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2422 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2427 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2432 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2437 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2442 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2447 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2452 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2457 > /dev/null
+iw dev $CLIENT_INTERFACE scan freq 2462 > /dev/null
+
+iw dev $CLIENT_INTERFACE scan | grep -E "^BSS|freq|signal|SSID"

@@ -26,13 +26,13 @@ echo "\"ap:mac\": \"$output\","
 if which uci get system.@system[0].lat >/dev/null; then
 	output=`uci get system.@system[0].lat`
 else
-	output="0"
+	output=""
 fi
 echo "\"sys:lat\": \"$output\","
 if which uci get system.@system[0].lon >/dev/null; then
 	output=`uci get system.@system[0].lon`
 else
-	output="0"
+	output=""
 fi
 echo "\"sys:lon\": \"$output\","
 
