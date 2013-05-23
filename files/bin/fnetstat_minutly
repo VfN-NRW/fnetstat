@@ -82,7 +82,7 @@ if which batctl >/dev/null; then
 		IFS="
 "
 		
-		BAT_ADV_ORIGINATORS=`batctl o | grep 'wlan0-1' | awk '/O/ {next} /B/ {next} {print}'`
+		BAT_ADV_ORIGINATORS=`batctl o | grep '$ADHOC_INTERFACE' | awk '/O/ {next} /B/ {next} {print}'`
 		echo "\"batman\": ["
 		b="0"
 		
