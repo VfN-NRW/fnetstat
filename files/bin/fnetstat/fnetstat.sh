@@ -3,48 +3,75 @@
 # Update from Wermelskirchen by RubenKelevra 2012 - cyrond@gmail.com
 # Lizenz: GPL
 
-echo "<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html><head></head><body><pre>"
-echo "sys:script=v4"
+MESH_INTERFACE="br-freifunk"
+CLIENT_INTERFACES="wlan0"
+BRCTL="/bin/brctl_ff"
+
+echo "{"
+
+echo "\"sys:script\": \"v0.5\","
+echo "\"type\": \"minutly\","
 #hostnamen ausgeben
-echo -en "sys:hostname="
-cat /proc/sys/kernel/hostname
-#br-mesh IPv6 Adresse
-echo -en "ip6:br-mesh="
-ifconfig br-mesh | grep Global | awk '{ print $3 }' | sed -e 's/\/64//g'
-#br-mesh IPv4 Adresse
-echo -en "ip4:br-mesh="
-ifconfig br-mesh | grep 'inet addr' | awk '{ print $2}' | sed -e 's/addr://g'
-#uptime & idletime
-echo -en "sys:uptime="
-cat /proc/uptime | awk '{ print $1 }'
-echo -en "sys:idletime="
-cat /proc/uptime | awk '{ print $2 }'
+output=`cat /proc/sys/kernel/hostname`
+echo "\"sys:hostname\": \"$output\","
+#IPv6 Adresse Global
+output=`ifconfig $MESH_INTERFACE | grep Scope:Global | awk '{ print $3 }' | sed -e 's/\/64//g'`
+echo "\"sys:ip6:global\": \"$output\","
+#IPv6 Adresse Link
+output=`ifconfig $MESH_INTERFACE | grep Scope:Link | awk '{ print $3 }' | sed -e 's/\/64//g'`
+echo "\"sys:ip6:link\": \"$output\","
+#IPv4 Adresse
+output=`ifconfig $MESH_INTERFACE | grep 'inet addr' | awk '{ print $2}' | sed -e 's/addr://g'`
+echo "\"sys:ip4\": \"$output\","
+#uptime, localtime & idletime
+output=`cat /proc/uptime | awk '{ print $1 }'`
+echo "\"sys:uptime\": $output,"
+output=`date -Iseconds`
+echo "\"sys:localtime\": \"$output\","
+output=`cat /proc/uptime | awk '{ print $2 }'`
+echo "\"sys:idletime\": $output,"
 #sysinfo memory
-echo -en "sys:memory_total="
-cat /proc/meminfo | grep 'MemTotal' | awk '{ print $2 }'
-echo -en "sys:memory_caching="
-cat /proc/meminfo | grep -m 1 'Cached:' | awk '{ print $2 }'
-echo -en "sys:memory_buffering="
-cat /proc/meminfo | grep 'Buffers' | awk '{ print $2 }'
-echo -en "sys:memory_free="
-cat /proc/meminfo | grep 'MemFree' | awk '{ print $2 }'
-echo -en "sys:processes="
-cat /proc/loadavg | awk '{ print $4 }'
-echo -en "sys:loadavg="
-cat /proc/loadavg | awk '{ print $1 }'
- 
+echo "\"sys:memory\": {"
+output=`cat /proc/meminfo | grep 'MemTotal' | awk '{ print $2 }'`
+echo "  \"total\": $output,"
+output=`cat /proc/meminfo | grep -m 1 'Cached:' | awk '{ print $2 }'`
+echo "  \"caching\": $output,"
+output=`cat /proc/meminfo | grep 'Buffers' | awk '{ print $2 }'`
+echo "  \"buffering\": $output,"
+output=`cat /proc/meminfo | grep 'MemFree' | awk '{ print $2 }'`
+echo "  \"free\": $output"
+echo "  },"
+output=`cat /proc/loadavg | awk '{ print $4 }'`
+echo "\"sys:processes\": \"$output\","
+output=`cat /proc/loadavg | awk '{ print $1 }'`
+echo "\"sys:loadavg\": $output,"
+
 IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%s=%s=%s ", $1, a[1], a[9], a[4]) }'`
+echo "\"traffic\": ["
+
+b="0"
 for entry in $IFACES; do
+	if [ $b -eq "1" ]; then
+		echo ","
+	fi
+	echo -en "  {"
 	iface=`echo $entry | cut -d '=' -f 1`
+	echo " \"interface\": \"$iface\","
 	rx=`echo $entry | cut -d '=' -f 2`
+	echo "    \"rx\": $rx,"
 	tx=`echo $entry | cut -d '=' -f 3`
+	echo "    \"tx\": $tx,"
 	drop=`echo $entry | cut -d '=' -f 4`
-	echo "traffic:$iface:rx=$rx"
-	echo "traffic:$iface:tx=$tx"
-	echo "traffic:$iface:drop=$drop"
+	echo "    \"drop\": $drop"
+	echo -en "  }"
+	b="1"
 done
 
+if [ $b -eq "1" ]; then
+	echo ""
+fi
 
+echo "  ],"
 
 #B.A.T.M.A.N. advanced
 if which batctl >/dev/null; then
@@ -53,7 +80,11 @@ if which batctl >/dev/null; then
 		OLDIFS=$IFS
 		IFS="
 "
+		
 		BAT_ADV_ORIGINATORS=`batctl o | grep 'wlan0-1' | awk '/O/ {next} /B/ {next} {print}'`
+		echo "\"batman\": ["
+		b="0"
+		
 		for row in $BAT_ADV_ORIGINATORS; do
 			originator=`echo $row | awk '{print $1}'`
 			next_hop=`echo $row | awk '{print $4}'`
@@ -64,30 +95,45 @@ if which batctl >/dev/null; then
 			link_quality="${link_quality//)/}"
 			
 			if [ "$next_hop" == "$originator" ]; then
-				echo "bat:originator=$originator"
-				echo "bat:last_seen:$originator=$last_seen"
-				echo "bat:linkquali:$originator=$link_quality"
+				if [ $b -eq "1" ]; then
+					echo ","
+				fi
+				echo -en "  {"
+				echo " \"originator\": \"$originator\","
+				echo "    \"last_seen\": \"$last_seen\","
+				echo "    \"linkquality\": \"$link_quality\","
+				echo -en "  }"
+				b="1"
 			fi
 		done
+		
+		if [ $b -eq "1" ]; then
+			echo ""
+		fi
+
+		echo "  ],"
+		
 		IFS=$OLDIFS
 	fi
 fi
 
-MESH_INTERFACE="br-mesh"
-CLIENT_INTERFACES="wlan0"
-BRCTL="/bin/debug/brctl"
-#CLIENTS
-SEDDEV=`$BRCTL showstp $MESH_INTERFACE | egrep '\([0-9]\)' | sed -e "s/(//;s/)//" | awk '{ print "s/^  "$2"/"$1"/;" }'`
-	
-for entry in $CLIENT_INTERFACES; do
-	CLIENT_MACS=$CLIENT_MACS`$BRCTL showmacs $MESH_INTERFACE | sed -e "$SEDDEV" | awk '{if ($3 != "yes" && $1 == "'"$entry"'") print $2}'`" "
-done
-					
-i=0
-for client in $CLIENT_MACS; do
-	i=`expr $i + 1`  #Zähler um eins erhöhen
-done
-echo "sys:clients=$i"
+if which $BRCTL >/dev/null; then
 
-#
-echo "</pre></body></html>"
+	#CLIENTS
+	SEDDEV=`$BRCTL showstp $MESH_INTERFACE | egrep '\([0-9]\)' | sed -e "s/(//;s/)//" | awk '{ print "s/^  "$2"/"$1"/;" }'`
+		
+	for entry in $CLIENT_INTERFACES; do
+		CLIENT_MACS=$CLIENT_MACS`$BRCTL showmacs $MESH_INTERFACE | sed -e "$SEDDEV" | awk '{if ($3 != "yes" && $1 == "'"$entry"'") print $2}'`" "
+	done
+						
+	output=0
+	for client in $CLIENT_MACS; do
+		output=`expr $i + 1`  #Zähler um eins erhöhen
+	done
+	echo "\"ap:clients\": $output"
+
+else
+	echo "\"E: BRCTL missing\": \"yes\""
+fi
+
+echo "}"
