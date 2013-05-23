@@ -1,0 +1,52 @@
+
+echo "<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html><head></head><body><pre>"
+echo "sys:script=V3"
+iw dev wlan0 scan freq 2412 > /dev/null
+iw dev wlan0 scan freq 2417 > /dev/null
+iw dev wlan0 scan freq 2422 > /dev/null
+iw dev wlan0 scan freq 2427 > /dev/null
+iw dev wlan0 scan freq 2432 > /dev/null
+iw dev wlan0 scan freq 2437 > /dev/null
+iw dev wlan0 scan freq 2442 > /dev/null
+iw dev wlan0 scan freq 2447 > /dev/null
+iw dev wlan0 scan freq 2452 > /dev/null
+iw dev wlan0 scan freq 2457 > /dev/null
+iw dev wlan0 scan freq 2462 > /dev/null
+
+iw dev wlan0 scan freq 2412 > /dev/null
+iw dev wlan0 scan freq 2417 > /dev/null
+iw dev wlan0 scan freq 2422 > /dev/null
+iw dev wlan0 scan freq 2427 > /dev/null
+iw dev wlan0 scan freq 2432 > /dev/null
+iw dev wlan0 scan freq 2437 > /dev/null
+iw dev wlan0 scan freq 2442 > /dev/null
+iw dev wlan0 scan freq 2447 > /dev/null
+iw dev wlan0 scan freq 2452 > /dev/null
+iw dev wlan0 scan freq 2457 > /dev/null
+iw dev wlan0 scan freq 2462 > /dev/null
+
+iw dev wlan0 scan freq 2412 > /dev/null
+iw dev wlan0 scan freq 2417 > /dev/null
+iw dev wlan0 scan freq 2422 > /dev/null
+iw dev wlan0 scan freq 2427 > /dev/null
+iw dev wlan0 scan freq 2432 > /dev/null
+iw dev wlan0 scan freq 2437 > /dev/null
+iw dev wlan0 scan freq 2442 > /dev/null
+iw dev wlan0 scan freq 2447 > /dev/null
+iw dev wlan0 scan freq 2452 > /dev/null
+iw dev wlan0 scan freq 2457 > /dev/null
+iw dev wlan0 scan freq 2462 > /dev/null
+
+iw dev wlan0 scan freq 2412 | grep -E "^BSS|freq|signal|SSID"
+iw dev wlan0 scan freq 2417 | grep -E "^BSS|freq|signal|SSID"
+iw dev wlan0 scan freq 2422 | grep -E "^BSS|freq|signal|SSID"
+iw dev wlan0 scan freq 2427 | grep -E "^BSS|freq|signal|SSID"
+iw dev wlan0 scan freq 2432 | grep -E "^BSS|freq|signal|SSID"
+iw dev wlan0 scan freq 2437 | grep -E "^BSS|freq|signal|SSID"
+iw dev wlan0 scan freq 2442 | grep -E "^BSS|freq|signal|SSID"
+iw dev wlan0 scan freq 2447 | grep -E "^BSS|freq|signal|SSID"
+iw dev wlan0 scan freq 2452 | grep -E "^BSS|freq|signal|SSID"
+iw dev wlan0 scan freq 2457 | grep -E "^BSS|freq|signal|SSID"
+iw dev wlan0 scan freq 2462 | grep -E "^BSS|freq|signal|SSID"
+
+echo "</pre></body></html>"

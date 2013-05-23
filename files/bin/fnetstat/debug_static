@@ -1,0 +1,65 @@
+#!/bin/sh
+# Netmon Nodewatcher (C) 2010-2011 Freifunk Oldenburg
+# Update from Wermelskirchen by RubenKelevra 2012 - cyrond@gmail.com
+# Lizenz: GPL
+
+echo "<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html><head></head><body><pre>"
+echo "sys:script=v4"
+#hostnamen ausgeben
+echo -en "sys:hostname="
+cat /proc/sys/kernel/hostname
+
+#br-mesh IPv6 Adresse
+echo -en "ip6:br-mesh="
+ifconfig br-mesh | grep Global | awk '{ print $3 }' | sed -e 's/\/64//g'
+#BATMAN MAC-Address
+echo -en "bat:mac="
+ifconfig wlan0-1 | grep 'HWaddr' | awk '{ print $5}' 
+#AP MAC-Address
+echo -en "ap:mac="
+ifconfig wlan0 | grep 'HWaddr' | awk '{ print $5}' 
+
+#uci lat/lon
+
+POSITION_LAT=`uci get system.@system[0].lat`
+echo "uci:lat=$POSITION_LAT"
+POSITION_LON=`uci get system.@system[0].lon`
+echo "uci:lon=$POSITION_LON"
+
+
+#Mailkontaktadresse
+CONTACT_EMAIL_ADDRESS=`uci get system.@system[0].contact_mail`
+echo "uci:mail=$CONTACT_EMAIL_ADDRESS"
+
+#sysinfo hardware
+echo -en "sys:cpu_model="
+grep -m 1 "cpu model" /proc/cpuinfo | cut -d ":" -f 2
+
+CPU_MODEL_NAME=`cat /tmp/sysinfo/model`
+echo "sys:machine=$CPU_MODEL_NAME"
+
+
+echo -en "sys:system_type="
+grep -m 1 "system type" /proc/cpuinfo | cut -d ":" -f 2
+#sysinfo software
+echo -en "sys:batman_version="
+if which batctl >/dev/null; then
+		batctl -v | awk '{ print $2 }'
+	fi
+echo -en "sys:kernel_version="
+uname -r
+$distname = ""
+$distversion = ""
+openwrt_version_file="/etc/openwrt_release"
+if [ -f $openwrt_version_file ]; then
+	. $openwrt_version_file
+	distname=$DISTRIB_ID
+	distversion=$DISTRIB_RELEASE
+fi
+echo "sys:distrib_id=$distname"
+echo "sys:distrib_release=$distversion"
+FIRMWARE_NAME=`cat /etc/firmware`
+echo "sys:firmware_version=$FIRMWARE_NAME"
+
+
+echo "</pre></body></html>"
