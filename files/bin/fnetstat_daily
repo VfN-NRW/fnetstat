@@ -2,64 +2,66 @@
 # Netmon Nodewatcher (C) 2010-2011 Freifunk Oldenburg
 # Update from Wermelskirchen by RubenKelevra 2012 - cyrond@gmail.com
 # Lizenz: GPL
+MESH_INTERFACE="br-freifunk"
+ADHOC_INTERFACE="wlan0-1"
+CLIENT_INTERFACE="wlan0"
+BRCTL="/bin/brctl_ff"
 
-echo "<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"><html><head></head><body><pre>"
-echo "sys:script=v4"
+echo "{"
+
+echo "\"sys:script\": \"v0.5\","
+echo "\"type\": \"daily\","
 #hostnamen ausgeben
-echo -en "sys:hostname="
-cat /proc/sys/kernel/hostname
-
-#br-mesh IPv6 Adresse
-echo -en "ip6:br-mesh="
-ifconfig br-mesh | grep Global | awk '{ print $3 }' | sed -e 's/\/64//g'
+output=`cat /proc/sys/kernel/hostname`
+echo "\"sys:hostname\": \"$output\","
 #BATMAN MAC-Address
-echo -en "bat:mac="
-ifconfig wlan0-1 | grep 'HWaddr' | awk '{ print $5}' 
+output=`ifconfig $ADHOC_INTERFACE | grep 'HWaddr' | awk '{ print $5}'`
+echo "\"batman:mac\": \"$output\","
 #AP MAC-Address
-echo -en "ap:mac="
-ifconfig wlan0 | grep 'HWaddr' | awk '{ print $5}' 
+output=`ifconfig $CLIENT_INTERFACE | grep 'HWaddr' | awk '{ print $5}'`
+echo "\"ap:mac\": \"$output\","
 
 #uci lat/lon
 
-POSITION_LAT=`uci get system.@system[0].lat`
-echo "uci:lat=$POSITION_LAT"
-POSITION_LON=`uci get system.@system[0].lon`
-echo "uci:lon=$POSITION_LON"
+output=`uci get system.@system[0].lat`
+echo "\"sys:lat\": \"$output\","
+output=`uci get system.@system[0].lon`
+echo "\"sys:lon\": \"$output\","
 
 
 #Mailkontaktadresse
-CONTACT_EMAIL_ADDRESS=`uci get system.@system[0].contact_mail`
-echo "uci:mail=$CONTACT_EMAIL_ADDRESS"
+output=`uci get system.@system[0].contact_mail`
+echo "\"ap:contact:mail\": \"$output\","
 
 #sysinfo hardware
-echo -en "sys:cpu_model="
-grep -m 1 "cpu model" /proc/cpuinfo | cut -d ":" -f 2
+output=`grep -m 1 "cpu model" /proc/cpuinfo | cut -d ":" -f 2`
+echo "\"sys:cpu_model\": \"$output\","
 
-CPU_MODEL_NAME=`cat /tmp/sysinfo/model`
-echo "sys:machine=$CPU_MODEL_NAME"
+output=`cat /tmp/sysinfo/model`
+echo "\"sys:machine\": \"$output\","
 
-
-echo -en "sys:system_type="
-grep -m 1 "system type" /proc/cpuinfo | cut -d ":" -f 2
+output=`grep -m 1 "system type" /proc/cpuinfo | cut -d ":" -f 2`
+echo "\"sys:system_type\": \"$output\","
 #sysinfo software
-echo -en "sys:batman_version="
+echo -en "="
 if which batctl >/dev/null; then
-		batctl -v | awk '{ print $2 }'
-	fi
-echo -en "sys:kernel_version="
-uname -r
-$distname = ""
-$distversion = ""
+	output=`batctl -v | awk '{ print $2 }'`
+	echo "\"sys:batman_version\": \"$output\","
+else
+	echo "\"batctl_missing\": \"yes\","
+fi
+
+output=`uname -r`
+
+
 openwrt_version_file="/etc/openwrt_release"
 if [ -f $openwrt_version_file ]; then
 	. $openwrt_version_file
-	distname=$DISTRIB_ID
-	distversion=$DISTRIB_RELEASE
+	echo "\"sys:distrib_id\": \"$DISTRIB_ID\","
+	echo "\"sys:distrib_release\": \"$DISTRIB_RELEASE\","
 fi
-echo "sys:distrib_id=$distname"
-echo "sys:distrib_release=$distversion"
-FIRMWARE_NAME=`cat /etc/firmware`
-echo "sys:firmware_version=$FIRMWARE_NAME"
 
+output=`cat /etc/firmware`
+echo "\"sys:kernel_version\": \"$output\","
 
-echo "</pre></body></html>"
+echo "}"

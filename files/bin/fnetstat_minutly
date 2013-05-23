@@ -4,7 +4,8 @@
 # Lizenz: GPL
 
 MESH_INTERFACE="br-freifunk"
-CLIENT_INTERFACES="wlan0"
+ADHOC_INTERFACE="wlan0-1"
+CLIENT_INTERFACE="wlan0"
 BRCTL="/bin/brctl_ff"
 
 echo "{"
