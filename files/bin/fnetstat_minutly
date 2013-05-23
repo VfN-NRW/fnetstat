@@ -1,6 +1,6 @@
 #!/bin/sh
 # Netmon Nodewatcher (C) 2010-2011 Freifunk Oldenburg
-# Update from Wermelskirchen by RubenKelevra 2012 - cyrond@gmail.com
+# Update from Wermelskirchen by RubenKelevra 2012-2013 - cyrond@gmail.com
 # Lizenz: GPL
 
 MESH_INTERFACE="br-freifunk"

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Netmon Nodewatcher (C) 2010-2011 Freifunk Oldenburg
-# Update from Wermelskirchen by RubenKelevra 2012 - cyrond@gmail.com
+# Update from Wermelskirchen by RubenKelevra 2012-2013 - cyrond@gmail.com
 # Lizenz: GPL
 MESH_INTERFACE="br-freifunk"
 ADHOC_INTERFACE="wlan0-1"
@@ -23,9 +23,17 @@ echo "\"ap:mac\": \"$output\","
 
 #uci lat/lon
 
-output=`uci get system.@system[0].lat`
+if which uci get system.@system[0].lat >/dev/null; then
+	output=`uci get system.@system[0].lat`
+else
+	output=""
+fi
 echo "\"sys:lat\": \"$output\","
-output=`uci get system.@system[0].lon`
+if which uci get system.@system[0].lon >/dev/null; then
+	output=`uci get system.@system[0].lon`
+else
+	output=""
+fi
 echo "\"sys:lon\": \"$output\","
 
 
@@ -43,7 +51,7 @@ echo "\"sys:machine\": \"$output\","
 output=`grep -m 1 "system type" /proc/cpuinfo | cut -d ":" -f 2`
 echo "\"sys:system_type\": \"$output\","
 #sysinfo software
-echo -en "="
+
 if which batctl >/dev/null; then
 	output=`batctl -v | awk '{ print $2 }'`
 	echo "\"sys:batman_version\": \"$output\","
@@ -52,16 +60,6 @@ else
 fi
 
 output=`uname -r`
-
-
-openwrt_version_file="/etc/openwrt_release"
-if [ -f $openwrt_version_file ]; then
-	. $openwrt_version_file
-	echo "\"sys:distrib_id\": \"$DISTRIB_ID\","
-	echo "\"sys:distrib_release\": \"$DISTRIB_RELEASE\","
-fi
-
-output=`cat /etc/firmware`
 echo "\"sys:kernel_version\": \"$output\","
 
 echo "}"
