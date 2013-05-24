@@ -21,6 +21,9 @@ echo "\"type\": \"daily\","
 #hostnamen ausgeben
 output=`cat /proc/sys/kernel/hostname`
 echo "\"sys:hostname\": \"$output\","
+#unique boot-hash 
+output=`cat /tmp/fnetstat`
+echo "\"sys:boot_id\": \"$output\","
 #BATMAN MAC-Address
 output=`ifconfig $ADHOC_INTERFACE | grep 'HWaddr' | awk '{ print $5}'`
 echo "\"batman:mac\": \"$output\","
