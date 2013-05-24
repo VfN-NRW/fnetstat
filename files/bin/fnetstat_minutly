@@ -54,7 +54,10 @@ b="0"
 for entry in $IFACES; do
 	if [ $b -eq "1" ]; then
 		echo ","
+	else
+		b="1"
 	fi
+	
 	echo -en "  {"
 	iface=`echo $entry | cut -d '=' -f 1`
 	echo " \"interface\": \"$iface\","
@@ -65,7 +68,6 @@ for entry in $IFACES; do
 	drop=`echo $entry | cut -d '=' -f 4`
 	echo "    \"drop\": $drop"
 	echo -en "  }"
-	b="1"
 done
 
 if [ $b -eq "1" ]; then
@@ -83,7 +85,7 @@ if which batctl >/dev/null; then
 "
 		
 		BAT_ADV_ORIGINATORS=`batctl o | grep '$ADHOC_INTERFACE' | awk '/O/ {next} /B/ {next} {print}'`
-		echo "\"batman\": ["
+		echo "\"batman:originators\": ["
 		b="0"
 		
 		for row in $BAT_ADV_ORIGINATORS; do
@@ -98,13 +100,14 @@ if which batctl >/dev/null; then
 			if [ "$next_hop" == "$originator" ]; then
 				if [ $b -eq "1" ]; then
 					echo ","
+				else
+					b="1"
 				fi
 				echo -en "  {"
 				echo " \"originator\": \"$originator\","
 				echo "    \"last_seen\": \"$last_seen\","
 				echo "    \"linkquality\": \"$link_quality\","
 				echo -en "  }"
-				b="1"
 			fi
 		done
 		
@@ -116,6 +119,39 @@ if which batctl >/dev/null; then
 		
 		IFS=$OLDIFS
 	fi
+	
+	#batman-adv statistics
+	BATISTICS=`batctl s | awk '{ print $2 }'`
+	echo "\"batman:statistics\": {"
+
+	i=0
+	for row in $BATISTICS; do	
+		if [ $i == "0" ]; then		
+			echo "  \"tx\": \"$row\","
+		elif [ $i == 1 ]; then
+			echo "  \"tx_bytes\": $row,"
+		elif [ $i == 2 ]; then
+			echo "  \"tx_dropped\": $row,"
+		elif [ $i == 3 ]; then
+			echo "  \"rx\": $row,"
+		elif [ $i == 4 ]; then
+			echo "  \"rx_bytes\": $row,"
+		elif [ $i == 5 ]; then
+			echo "  \"forward\": $row,"
+		elif [ $i == 6 ]; then
+			echo "  \"forward_bytes\": $row,"
+		elif [ $i == 7 ]; then
+			echo "  \"mgmt_tx\": $row,"
+		elif [ $i == 8 ]; then
+			echo "  \"mgmt_tx_bytes\": $row,"
+		elif [ $i == 9 ]; then
+			echo "  \"mgmt_rx\": $row,"
+		elif [ $i == 10 ]; then
+			echo "  \"mgmt_rx_bytes\": $row"
+		fi
+		i=$(($i + 1))
+	done
+	echo "  },"
 fi
 
 if which $BRCTL >/dev/null; then
