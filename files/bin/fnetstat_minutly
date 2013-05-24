@@ -7,6 +7,13 @@ MESH_INTERFACE="br-freifunk"
 ADHOC_INTERFACE="wlan0-1"
 CLIENT_INTERFACE="wlan0"
 BRCTL="/bin/brctl_ff"
+WORK_FOLDER="/tmp/"
+BASIC_FILENAME="fnetstat"
+
+#check if unique boot-hash has been generated
+if [ ! -f "$WORK_FOLDER$BASIC_FILENAME" ]; then
+	echo $(head -1 /dev/urandom | md5sum | awk '{ print $1 }') > "$WORK_FOLDER$BASIC_FILENAME" | true
+fi
 
 echo "{"
 
