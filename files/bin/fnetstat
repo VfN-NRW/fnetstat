@@ -1,0 +1,48 @@
+#!/bin/sh
+# fnetstat by RubenKelevra 2013 - cyrond@gmail.com
+# Lizenz: GPL 
+
+WORK_FOLDER="/tmp/"
+BACKUP_FOLDER="/usr/share/fnetstat/"
+MINUTLY="/bin/fnetstat_minutly"
+DAILY="/bin/fnetstat_daily"
+WIFISCAN="/bin/fnetstat_wifiscan"
+
+BASIC_FILENAME="fnetstat"
+DAILY_FILENAME="fnetstat_day"
+WIFI_FILENAME="fnetstat_wifi"
+
+mkdir -p $BACKUP_FOLDER
+
+if [ ! -f $MINUTLY ]; then
+  echo "$MINUTLY-Script was not found"
+fi
+if [ ! -f $DAILY ]; then
+	echo "$DAILY-Script was not found"
+fi
+if [ ! -f $WIFISCAN ]; then
+	echo "$WIFISCAN-Script was not found"
+fi
+
+if [ $# -eq 1 ]; then
+	if [ "$1" == "cronjob" -o "$1" == "c" ]; then
+		echo "a" #fixme
+	elif [ "$1" == "statistic" -o "$1" == "s" ]; then
+		echo "c" #fixme
+	else
+		echo "fallback" #fixme
+	fi
+else
+	echo ""
+	echo "This is fnetstat."
+	echo ""
+	echo "Usage:"
+	echo "       c / cronjob   - This keyword is used to enable the cronjob automatic"
+	echo "                       behavior. Usually the script is started every minute and"
+    echo "                       send data 4 times in an hour to the server."
+	echo "       s / statistic - this prints an short statistic overview"
+    echo ""
+	echo ""
+	echo " This program is copyrighted under GPL"
+	echo ""
+fi
