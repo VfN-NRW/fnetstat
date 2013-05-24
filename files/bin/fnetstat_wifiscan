@@ -48,7 +48,7 @@ iw dev $CLIENT_INTERFACE scan freq 2452 > /dev/null
 iw dev $CLIENT_INTERFACE scan freq 2457 > /dev/null
 iw dev $CLIENT_INTERFACE scan freq 2462 > /dev/null
 
-WIFIS=`iw dev $CLIENT_INTERFACE scan | grep -E "^BSS|freq|signal|SSID" | awk '{print $2}' | sed 's/\\/./g' | sed 's/\"/./g'`
+WIFIS=`iw dev $CLIENT_INTERFACE scan | grep -E "^BSS|freq|signal|SSID" | awk '{print $2}' | sed 's/\"/./g'`
 echo "\"wifi\": ["
 b="0"
 i=0
