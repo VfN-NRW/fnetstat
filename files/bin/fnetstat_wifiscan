@@ -48,4 +48,35 @@ iw dev $CLIENT_INTERFACE scan freq 2452 > /dev/null
 iw dev $CLIENT_INTERFACE scan freq 2457 > /dev/null
 iw dev $CLIENT_INTERFACE scan freq 2462 > /dev/null
 
-iw dev $CLIENT_INTERFACE scan | grep -E "^BSS|freq|signal|SSID"
+WIFIS=`iw dev $CLIENT_INTERFACE scan | grep -E "^BSS|freq|signal|SSID" | awk '{print $2}'`
+echo "\"wifi\": ["
+b="0"
+i=0
+for row in $WIFIS; do	
+	if [ $(($i % 4)) == 0 ]; then
+		if [ $b -eq "1" ]; then
+			echo ","
+		else
+			b="1"
+		fi
+	
+		echo -en "  {"
+		echo " \"bss\": \"$row\","
+	elif [ $(($i % 4)) == 1 ]; then
+		echo "    \"freq\": \"$row\","
+	elif [ $(($i % 4)) == 2 ]; then
+		echo "    \"signal\": \"$row\","
+	elif [ $(($i % 4)) == 3 ]; then
+		echo "    \"ssid\": \"$row\","
+		echo -en "  }"
+	fi
+	i=$(($i + 1))
+done
+
+if [ $b -eq "1" ]; then
+	echo ""
+fi
+
+echo "  ]"
+
+echo "}"
