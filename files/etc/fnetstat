@@ -1,0 +1,9 @@
+package fnetstat
+
+config fnetstat cronjob
+	option upload_diff -1
+	option upload_per_hour 4
+	option x_minutly 1
+	option x_hourly 24
+	
+	option syslog_level 'verbose'
