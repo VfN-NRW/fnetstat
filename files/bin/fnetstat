@@ -29,7 +29,12 @@ fi
 
 if [ $# -eq 1 ]; then
 	if [ "$1" == "cronjob" -o "$1" == "c" ]; then
-		echo "a" #fixme
+		#check uci diff
+		if which uci get upload_diff >/dev/null; then
+			output=`uci get system.@system[0].lat`
+		else
+			output=""
+		fi
 	elif [ "$1" == "statistic" -o "$1" == "s" ]; then
 		echo "c" #fixme
 	else
@@ -42,9 +47,9 @@ else
 	echo "Usage:"
 	echo "       c / cronjob   - This keyword is used to enable the cronjob automatic"
 	echo "                       behavior. Usually the script is started every minute and"
-    echo "                       send data 4 times in an hour to the server."
+	echo "                       send data 4 times in an hour to the server."
 	echo "       s / statistic - this prints an short statistic overview"
-    echo ""
+	echo ""
 	echo ""
 	echo " This program is copyrighted under GPL"
 	echo ""
