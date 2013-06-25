@@ -1,5 +1,5 @@
 #!/bin/sh
-# Update from Wermelskirchen by RubenKelevra 2012-2013 - cyrond@gmail.com
+# by RubenKelevra 2012-2013 - cyrond@gmail.com
 # Lizenz: GPL
 
 MESH_INTERFACE="br-freifunk"
