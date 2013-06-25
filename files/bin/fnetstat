@@ -30,8 +30,8 @@ fi
 if [ $# -eq 1 ]; then
 	if [ "$1" == "cronjob" -o "$1" == "c" ]; then
 		#check uci diff
-		if which uci get upload_diff >/dev/null; then
-			output=`uci get system.@system[0].lat`
+		if which uci get fnetstat.cronjob.upload_diff >/dev/null; then
+			output=`uci get fnetstat.cronjob.upload_diff`
 		else
 			output=""
 		fi
