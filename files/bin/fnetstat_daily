@@ -32,7 +32,7 @@ output=`ifconfig $CLIENT_INTERFACE | grep 'HWaddr' | awk '{ print $5}'`
 echo "\"ap:mac\": \"$output\","
 #HW-ID
 output=`ifconfig eth0 | grep 'HWaddr' | sed "s/^[ ]*//" | awk '{ print $5}' | sed 's/://g'`
-echo "\"ap:hwid\": \"$output\","
+echo "\"sys:hwid\": \"$output\","
 
 #uci lat/lon
 
