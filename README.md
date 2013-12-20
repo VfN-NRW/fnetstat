@@ -3,7 +3,7 @@ und eine Statistik komprimiert und verschlüsselt an definierte Server übertrag
 Shell-Script geschrieben.
 
 In der Standardkonfiguration wird das Script menütlich mit dem Parameter cronjob gestartet. Dieses
-sammelt die statistischen Daten im /tmp-Verzeichnis. In per Konfiguration definerten Intervallen
+sammelt die statistischen Daten im /tmp-Verzeichnis. In per Konfiguration definierten Intervallen
 werden diese Informationen bzip2-Komprimiert und auf den Server per SCP übertragen.
 
 Einmal täglich werden statische Daten wie die Position, eine Kontaktadresse und diverse Hard- und
