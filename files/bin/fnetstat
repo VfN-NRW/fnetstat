@@ -2,6 +2,7 @@
 # fnetstat by RubenKelevra 2013 - cyrond@gmail.com
 # Lizenz: AGPL 3.0
 
+#basic definitions
 WORK_FOLDER="/tmp/"
 BACKUP_FOLDER="/usr/share/fnetstat/"
 MINUTLY="/bin/fnetstat_minutly"
@@ -11,6 +12,12 @@ WIFISCAN="/bin/fnetstat_wifiscan"
 BASIC_FILENAME="fnetstat"
 DAILY_FILENAME="fnetstat_day"
 WIFI_FILENAME="fnetstat_wifi"
+
+#uci vars
+UCI_ULDIFF="fnetstat.cronjob.upload_diff"
+ULDIFF=-1
+
+PRINTHELP=0
 
 mkdir -p $BACKUP_FOLDER
 
@@ -30,17 +37,24 @@ fi
 if [ $# -eq 1 ]; then
 	if [ "$1" == "cronjob" -o "$1" == "c" ]; then
 		#check uci diff
-		if which uci get fnetstat.cronjob.upload_diff >/dev/null; then
-			output=`uci get fnetstat.cronjob.upload_diff`
-		else
-			output=""
+		if which uci get $UCI_ULDIFF >/dev/null; then
+			ULDIFF=`uci get $UCI_ULDIFF`
 		fi
 	elif [ "$1" == "statistic" -o "$1" == "s" ]; then
-		echo "c" #fixme
+		echo "Error: parameter not yet implemented." #fixme
+		PRINTHELP=1
 	else
-		echo "fallback" #fixme
+		echo "Error: parameter not available." #fixme
+		PRINTHELP=1
 	fi
+elif [ $# -gt 1 ]; then
+	echo "Error: too many parameters."
+	PRINTHELP=1
 else
+	PRINTHELP=1
+fi
+
+if [ PRINTHELP -eq 1 ]; then
 	echo ""
 	echo "This is fnetstat."
 	echo ""
@@ -50,8 +64,9 @@ else
 	echo "                       send data 4 times in an hour to the server."
 	echo "       s / statistic - this prints an short statistic overview"
 	echo ""
-	echo "	Use UCI for further configurations or edit /etc/config/fnetstat."
+	echo " Use UCI for further configurations or edit /etc/config/fnetstat."
 	echo ""
 	echo " This program is copyrighted under AGPL 3.0"
 	echo ""
+	exit 0
 fi
