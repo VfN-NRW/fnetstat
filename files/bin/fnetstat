@@ -50,6 +50,7 @@ else
 	echo "                       send data 4 times in an hour to the server."
 	echo "       s / statistic - this prints an short statistic overview"
 	echo ""
+	echo "	Use UCI for further configurations or edit /etc/config/fnetstat."
 	echo ""
 	echo " This program is copyrighted under AGPL 3.0"
 	echo ""
