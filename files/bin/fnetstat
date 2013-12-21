@@ -13,10 +13,6 @@ BASIC_FILENAME="fnetstat"
 DAILY_FILENAME="fnetstat_day"
 WIFI_FILENAME="fnetstat_wifi"
 
-#uci vars
-UCI_ULDIFF="fnetstat.cronjob.upload_diff"
-ULDIFF=-1
-
 PRINTHELP=0
 
 mkdir -p $BACKUP_FOLDER
@@ -36,10 +32,7 @@ fi
 
 if [ $# -eq 1 ]; then
 	if [ "$1" == "cronjob" -o "$1" == "c" ]; then
-		#check uci diff
-		if which uci get $UCI_ULDIFF >/dev/null; then
-			ULDIFF=`uci get $UCI_ULDIFF`
-		fi
+		echo "Debug: starting normal cron-job run..."
 	elif [ "$1" == "statistic" -o "$1" == "s" ]; then
 		echo "Error: parameter not yet implemented." #fixme
 		PRINTHELP=1
@@ -69,4 +62,30 @@ if [ $PRINTHELP -eq 1 ]; then
 	echo " This program is copyrighted under AGPL 3.0"
 	echo ""
 	exit 0
+fi
+
+### begin ###
+
+#uci vars
+UCI_ULDIFF="fnetstat.cronjob.upload_diff"
+
+ULDIFF=-1
+FIRST_RUN_AFTER_BOOT=0
+
+#check uci diff
+if which uci get $UCI_ULDIFF >/dev/null; then
+	ULDIFF=`uci get $UCI_ULDIFF`
+	if [ $ULDIFF = "" ]; then
+        	ULDIFF=-1
+	fi
+fi
+
+if ! [ -f $WORK_FOLDER$BASIC_FILENAME ]; then 
+	echo "Debug: random unique boot-hash hasn't been generated, we're running first time after boot"
+	FIRST_RUN_AFTER_BOOT=1
+fi
+
+if [ $ULDIFF -eq -1 -o $FORCE_ULDIFF_UPDATE -eq 1 ]; then #we randomly generate a diff 
+	echo "Debug: generating upload-diff..."
+# elif #fixme check maximal diff to 60/x where x is uploads per hour
 fi
