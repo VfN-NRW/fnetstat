@@ -1,7 +1,7 @@
 #!/bin/sh
 # Netmon Nodewatcher (C) 2010-2011 Freifunk Oldenburg
 # Update from Wermelskirchen by RubenKelevra 2012-2013 - cyrond@gmail.com
-# Lizenz: GPL
+# Lizenz: GPL / AGPL 3.0
 
 MESH_INTERFACE="br-freifunk"
 ADHOC_INTERFACE="wlan0-1"
@@ -175,7 +175,7 @@ if which $BRCTL >/dev/null; then
 						
 	output=0
 	for client in $CLIENT_MACS; do
-		output=`expr $i + 1`  #Zähler um eins erhöhen
+		output=`expr $i + 1`  #Zï¿½hler um eins erhï¿½hen
 	done
 	echo "\"ap:clients\": $output"
 
