@@ -1,6 +1,6 @@
 #!/bin/sh
 # fnetstat by RubenKelevra 2013 - cyrond@gmail.com
-# Lizenz: GPL 
+# Lizenz: AGPL 3.0
 
 WORK_FOLDER="/tmp/"
 BACKUP_FOLDER="/usr/share/fnetstat/"
@@ -51,6 +51,6 @@ else
 	echo "       s / statistic - this prints an short statistic overview"
 	echo ""
 	echo ""
-	echo " This program is copyrighted under GPL"
+	echo " This program is copyrighted under AGPL 3.0"
 	echo ""
 fi
