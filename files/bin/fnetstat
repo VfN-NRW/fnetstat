@@ -54,7 +54,7 @@ else
 	PRINTHELP=1
 fi
 
-if [ PRINTHELP -eq 1 ]; then
+if [ $PRINTHELP -eq 1 ]; then
 	echo ""
 	echo "This is fnetstat."
 	echo ""
