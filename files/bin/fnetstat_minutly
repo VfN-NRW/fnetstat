@@ -4,8 +4,9 @@
 # Lizenz: GPL / AGPL 3.0
 
 MESH_INTERFACE="br-freifunk"
-ADHOC_INTERFACE="wlan0-1"
-CLIENT_INTERFACE="wlan0"
+ADHOC_INTERFACE="wlan0-1" #more then one with "a|b"
+#not in use
+;CLIENT_INTERFACE="wlan0" #more then one with "a|b"
 BRCTL="/bin/brctl_ff"
 WORK_FOLDER="/tmp/"
 BASIC_FILENAME="fnetstat"
@@ -94,7 +95,7 @@ if which batctl >/dev/null; then
 		IFS="
 "
 		
-		BAT_ADV_ORIGINATORS=`batctl o | grep '$ADHOC_INTERFACE' | awk '/O/ {next} /B/ {next} {print}'`
+		BAT_ADV_ORIGINATORS=`batctl o | grep -E '$ADHOC_INTERFACE' | awk '/O/ {next} /B/ {next} {print}'`
 		echo "\"batman:originators\": ["
 		b="0"
 		
@@ -169,9 +170,8 @@ if which $BRCTL >/dev/null; then
 	#CLIENTS
 	SEDDEV=`$BRCTL showstp $MESH_INTERFACE | egrep '\([0-9]\)' | sed -e "s/(//;s/)//" | awk '{ print "s/^  "$2"/"$1"/;" }'`
 		
-	for entry in $CLIENT_INTERFACES; do
-		CLIENT_MACS=$CLIENT_MACS`$BRCTL showmacs $MESH_INTERFACE | sed -e "$SEDDEV" | awk '{if ($3 != "yes" && $1 == "'"$entry"'") print $2}'`" "
-	done
+	CLIENT_MACS=$CLIENT_MACS`$BRCTL showmacs $MESH_INTERFACE | sed -e "$SEDDEV" | awk '{if ($3 != "yes" && $1 == "'"$entry"'") print $2}'`" "
+
 						
 	output=0
 	for client in $CLIENT_MACS; do
