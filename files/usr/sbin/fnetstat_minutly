@@ -6,7 +6,7 @@
 MESH_INTERFACE="br-freifunk"
 ADHOC_INTERFACE="wlan0-1" #more then one with "a|b"
 #not in use
-;CLIENT_INTERFACE="wlan0" #more then one with "a|b"
+#CLIENT_INTERFACE="wlan0" #more then one with "a|b"
 BRCTL="/bin/brctl_ff"
 WORK_FOLDER="/tmp/"
 BASIC_FILENAME="fnetstat"
