@@ -6,15 +6,19 @@
 MESH_BR="br-l2mesh"
 ADHOC_WIFI="wlan0|wlan1" #more then one with "a|b"
 ADHOC_ETH="br-wan" #more then one with "a|b"
+WAN_BR="br-wan"
 #not in use
 CLIENT_WIFI="wlan0-1|wlan1-1" #more then one with "a|b"
 BRCTL="/bin/brctl_ff"
 WORK_FOLDER="/tmp/"
 BASIC_FILENAME="fnetstat"
 
+#import variables
+source "$WORK_FOLDER$BASIC_FILENAME"
+
 #check if unique boot-hash has been generated
-if [ ! -f "$WORK_FOLDER$BASIC_FILENAME" ]; then
-	echo $(head -1 /dev/urandom | md5sum | awk '{ print $1 }') > "$WORK_FOLDER$BASIC_FILENAME" | true
+if [ -z $BootID ]; then
+    BootID=$(head -1 /dev/urandom | md5sum | awk '{ print $1 }')
 fi
 
 echo "{"
@@ -25,7 +29,7 @@ echo "\"type\": \"minutly\","
 output=`cat /proc/sys/kernel/hostname`
 echo "\"sys:hostname\": \"$output\","
 #unique boot-hash 
-output=`cat /tmp/fnetstat`
+output=`echo $BootID`
 echo "\"sys:boot_id\": \"$output\","
 #IPv6 Adresse Global
 output=`ifconfig $MESH_BR | grep Scope:Global | awk '{ print $3 }' | sed -e 's/\/64//g'`
@@ -33,9 +37,20 @@ echo "\"sys:ip6:global\": \"$output\","
 #IPv6 Adresse Link
 output=`ifconfig $MESH_BR | grep Scope:Link | awk '{ print $3 }' | sed -e 's/\/64//g'`
 echo "\"sys:ip6:link\": \"$output\","
-#IPv4 Adresse
-output=`ifconfig $MESH_BR | grep 'inet addr' | awk '{ print $2}' | sed -e 's/addr://g'`
-echo "\"sys:ip4\": \"$output\","
+#WAN IPv4 Adresse
+output=`ifconfig $WAN_BR | grep 'inet addr' | awk '{ print $2}' | sed -e 's/addr://g'`
+echo "\"sys:wan:ip4\": \"$output\","
+#WAN IPv6 Adresse
+output=`ifconfig $WAN_BR | grep Scope:Global | awk '{ print $3 }' | sed -e 's/\/64//g'`
+echo "\"sys:wan:ip6\": \"$output\","
+#WAN IPv4 Connection
+output=`ping -q -I $WAN_BR 8.8.8.8 -c 4 -W 5 >/dev/null 2>&1 && echo 1`
+[ -z "$output" ] && output=0
+echo "\"sys:wan:ip4:work\": $output,"
+#WAN IPv6 Connection
+output=`ping -q -I $WAN_BR 2001:4860:4860::8888 -c 4 -W 5 >/dev/null 2>&1 && echo 1`
+[ -z "$output" ] && output=0
+echo "\"sys:wan:ip6:work\": \"$output\","
 #uptime, localtime & idletime
 output=`cat /proc/uptime | awk '{ print $1 }'`
 echo "\"sys:uptime\": $output,"
