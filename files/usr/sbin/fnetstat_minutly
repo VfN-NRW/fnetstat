@@ -217,7 +217,7 @@ if which $BRCTL >/dev/null; then
 	echo "\"ap:clients\": $output"
 
 else
-	echo "\"E: BRCTL missing\": \"yes\""
+	echo "\"ap:clients\": -1"
 fi
 
 echo "}"
