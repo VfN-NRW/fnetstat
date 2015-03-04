@@ -33,6 +33,9 @@ echo "\"ap:mac\": \"$output\","
 #HW-ID
 output=`ifconfig eth0 | grep 'HWaddr' | sed "s/^[ ]*//" | awk '{ print $5}' | sed 's/://g'`
 echo "\"sys:hwid\": \"$output\","
+output=""
+[ $(uci get fastd.ffmesh.secret) != 'generate' ] && output=$(/etc/init.d/fastd show_key ffmesh)
+echo "\"fastd:pubkey\": \"$output\","
 
 #uci lat/lon
 
