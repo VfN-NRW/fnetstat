@@ -1,5 +1,5 @@
 #!/bin/sh
-# by RubenKelevra 2012-2013 - cyrond@gmail.com
+# by RubenKelevra 2012-2015 - cyrond@gmail.com
 # Lizenz: AGPL 3.0
 
 MESH_INTERFACE="br-freifunk"
