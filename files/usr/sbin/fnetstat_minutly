@@ -3,10 +3,11 @@
 # Update from Wermelskirchen by RubenKelevra 2012-2015 - cyrond@gmail.com
 # Lizenz: GPL / AGPL 3.0
 
-MESH_INTERFACE="br-freifunk"
-ADHOC_INTERFACE="wlan0-1" #more then one with "a|b"
+MESH_BR="br-l2mesh"
+ADHOC_WIFI="wlan0|wlan1" #more then one with "a|b"
+ADHOC_ETH="br-wan" #more then one with "a|b"
 #not in use
-#CLIENT_INTERFACE="wlan0" #more then one with "a|b"
+CLIENT_WIFI="wlan0-1|wlan1-1" #more then one with "a|b"
 BRCTL="/bin/brctl_ff"
 WORK_FOLDER="/tmp/"
 BASIC_FILENAME="fnetstat"
@@ -18,7 +19,7 @@ fi
 
 echo "{"
 
-echo "\"sys:script\": \"v0.5\","
+echo "\"sys:script\": \"v0.6b\","
 echo "\"type\": \"minutly\","
 #hostname 
 output=`cat /proc/sys/kernel/hostname`
@@ -27,13 +28,13 @@ echo "\"sys:hostname\": \"$output\","
 output=`cat /tmp/fnetstat`
 echo "\"sys:boot_id\": \"$output\","
 #IPv6 Adresse Global
-output=`ifconfig $MESH_INTERFACE | grep Scope:Global | awk '{ print $3 }' | sed -e 's/\/64//g'`
+output=`ifconfig $MESH_BR | grep Scope:Global | awk '{ print $3 }' | sed -e 's/\/64//g'`
 echo "\"sys:ip6:global\": \"$output\","
 #IPv6 Adresse Link
-output=`ifconfig $MESH_INTERFACE | grep Scope:Link | awk '{ print $3 }' | sed -e 's/\/64//g'`
+output=`ifconfig $MESH_BR | grep Scope:Link | awk '{ print $3 }' | sed -e 's/\/64//g'`
 echo "\"sys:ip6:link\": \"$output\","
 #IPv4 Adresse
-output=`ifconfig $MESH_INTERFACE | grep 'inet addr' | awk '{ print $2}' | sed -e 's/addr://g'`
+output=`ifconfig $MESH_BR | grep 'inet addr' | awk '{ print $2}' | sed -e 's/addr://g'`
 echo "\"sys:ip4\": \"$output\","
 #uptime, localtime & idletime
 output=`cat /proc/uptime | awk '{ print $1 }'`
@@ -57,6 +58,8 @@ output=`cat /proc/loadavg | awk '{ print $4 }'`
 echo "\"sys:processes\": \"$output\","
 output=`cat /proc/loadavg | awk '{ print $1 }'`
 echo "\"sys:loadavg\": $output,"
+output=`top -bn1 | grep ^CPU | awk '{ print $2,$4,$6,$8,$10,$12,$14 }' | sed 's/% /,/g' | sed 's/%//'`
+echo "\"sys:cpuusage\": \"$output\","
 
 IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%s=%s=%s ", $1, a[1], a[9], a[4]) }'`
 echo "\"traffic\": ["
@@ -89,17 +92,16 @@ echo "  ],"
 
 #B.A.T.M.A.N. advanced
 if which batctl >/dev/null; then
-	BAT_ADV_ORIGINATORS=`batctl o | grep 'No batman nodes in range'`
-	if [ "$BAT_ADV_ORIGINATORS" == "" ]; then
+	if [ "$(batctl o | grep 'No batman nodes in range')" == "" ]; then
 		OLDIFS=$IFS
 		IFS="
 "
 		
-		BAT_ADV_ORIGINATORS=`batctl o | grep -E '$ADHOC_INTERFACE' | awk '/O/ {next} /B/ {next} {print}'`
-		echo "\"batman:originators\": ["
+		BAT_O_WIFI=`batctl o | grep -E "$ADHOC_WIFI" | awk '/O/ {next} /B/ {next} {print}'`
+		echo "\"batman:wifi:originators\": ["
 		b="0"
 		
-		for row in $BAT_ADV_ORIGINATORS; do
+		for row in $BAT_O_WIFI; do
 			originator=`echo $row | awk '{print $1}'`
 			next_hop=`echo $row | awk '{print $4}'`
 			last_seen=`echo $row | awk '{print $2}'`
@@ -121,6 +123,41 @@ if which batctl >/dev/null; then
 				echo -en "  }"
 			fi
 		done
+		unset BAT_O_WIFI
+		
+		if [ $b -eq "1" ]; then
+			echo ""
+		fi
+
+		echo "  ],"
+		
+		BAT_O_ETH=`batctl o | grep -E "$ADHOC_ETH" | awk '/O/ {next} /B/ {next} {print}'`
+		echo "\"batman:eth:originators\": ["
+		b="0"
+		
+		for row in $BAT_O_ETH; do
+			originator=`echo $row | awk '{print $1}'`
+			next_hop=`echo $row | awk '{print $4}'`
+			last_seen=`echo $row | awk '{print $2}'`
+			last_seen="${last_seen//s/}"
+			link_quality=`echo $row | awk '{print $3}'`
+			link_quality="${link_quality//(/}"
+			link_quality="${link_quality//)/}"
+			
+			if [ "$next_hop" == "$originator" ]; then
+				if [ $b -eq "1" ]; then
+					echo ","
+				else
+					b="1"
+				fi
+				echo -en "  {"
+				echo " \"originator\": \"$originator\","
+				echo "    \"last_seen\": \"$last_seen\","
+				echo "    \"linkquality\": \"$link_quality\","
+				echo -en "  }"
+			fi
+		done
+		unset BAT_O_ETH
 		
 		if [ $b -eq "1" ]; then
 			echo ""
@@ -168,9 +205,9 @@ fi
 if which $BRCTL >/dev/null; then
 
 	#CLIENTS
-	SEDDEV=`$BRCTL showstp $MESH_INTERFACE | egrep '\([0-9]\)' | sed -e "s/(//;s/)//" | awk '{ print "s/^  "$2"/"$1"/;" }'`
+	SEDDEV=`$BRCTL showstp $MESH_BR | egrep '\([0-9]\)' | sed -e "s/(//;s/)//" | awk '{ print "s/^  "$2"/"$1"/;" }'`
 		
-	CLIENT_MACS=$CLIENT_MACS`$BRCTL showmacs $MESH_INTERFACE | sed -e "$SEDDEV" | awk '{if ($3 != "yes" && $1 == "'"$entry"'") print $2}'`" "
+	CLIENT_MACS=$CLIENT_MACS`$BRCTL showmacs $MESH_BR | sed -e "$SEDDEV" | awk '{if ($3 != "yes" && $1 == "'"$entry"'") print $2}'`" "
 
 						
 	output=0
