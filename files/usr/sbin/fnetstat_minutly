@@ -212,7 +212,7 @@ if which $BRCTL >/dev/null; then
 						
 	output=0
 	for client in $CLIENT_MACS; do
-		output=`expr $i + 1`  #Zähler um eins erhöhen
+		output=`expr $i + 1`
 	done
 	echo "\"ap:clients\": $output"
 
