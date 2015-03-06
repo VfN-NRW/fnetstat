@@ -5,12 +5,14 @@
 
 OLDIFS=$IFS
 IFS='\n'
-#fetch cpu-usage at first:
+#fetch untouched stats at first:
 cpuusage1=$(cat /proc/stat)
 sleep 10
 cpuusage2=$(cat /proc/stat)
 
-#reduce cpuusage stats
+#reduce stats
+softirqs1=$(echo $cpuusage1 | grep "softirq" | tr ' ' '=')
+softirqs2=$(echo $cpuusage2 | grep "softirq" | tr ' ' '=')
 cpuusage1=$(echo $cpuusage1 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
 cpuusage2=$(echo $cpuusage2 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
 IFS=$OLDIFS
@@ -89,11 +91,11 @@ echo "\"sys:processes\": \"$output\","
 output=`cat /proc/loadavg | awk '{ print $1 }'`
 echo "\"sys:loadavg\": $output,"
 
-echo "\"sys:cpuusage\": ["
+echo "\"sys:cpu\": ["
 OLDIFS=$IFS
 IFS='\n'
 b="0"
-for entry in "$cpuusage1"; do
+for entry in $cpuusage1; do
     if [ "$b" -eq "1" ]; then
         echo ","
     else
@@ -124,16 +126,16 @@ for entry in "$cpuusage1"; do
     
     echo "    \"user\": $user,"
     echo "    \"nice\": $nice,"
-    echo "    \"system\": $system"
-    echo "    \"idle\": $idle"
-    echo "    \"iowait\": $iowait"
-    echo "    \"irq\": $irq"
+    echo "    \"system\": $system,"
+    echo "    \"idle\": $idle,"
+    echo "    \"iowait\": $iowait,"
+    echo "    \"irq\": $irq,"
     echo "    \"sirq\": $sirq"
     
     echo -en "  }"
 done
 
-unset cpu user nice system idle iowait irq sirq
+
 
 if [ $b -eq "1" ]; then
     echo ""
@@ -142,9 +144,52 @@ fi
 echo "  ],"
 
 IFS=$OLDIFS
+unset cpu user nice system idle iowait irq sirq OLDIFS b
 
-IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%s=%s=%s ", $1, a[1], a[9], a[4]) }'`
+echo "\"sys:softirqs\": {"
+#softirqs fetched for 10 seconds, output avg/sec
+OLDIFS=$IFS
+IFS='\n'
+
+output=$(expr $(echo $softirqs2 | cut -d '=' -f 3) - $(echo $softirqs1 | cut -d '=' -f 3))
+output=$(awk "BEGIN {printf \"%.2f\",$output/10}")
+echo "    \"HI\": $output,"
+output=$(expr $(echo $softirqs2 | cut -d '=' -f 4) - $(echo $softirqs1 | cut -d '=' -f 4))
+output=$(awk "BEGIN {printf \"%.2f\",$output/10}")
+echo "    \"TIMER\": $output,"
+output=$(expr $(echo $softirqs2 | cut -d '=' -f 5) - $(echo $softirqs1 | cut -d '=' -f 5))
+output=$(awk "BEGIN {printf \"%.2f\",$output/10}")
+echo "    \"NET_TX\": $output,"
+output=$(expr $(echo $softirqs2 | cut -d '=' -f 6) - $(echo $softirqs1 | cut -d '=' -f 6))
+output=$(awk "BEGIN {printf \"%.2f\",$output/10}")
+echo "    \"NET_RX\": $output,"
+output=$(expr $(echo $softirqs2 | cut -d '=' -f 7) - $(echo $softirqs1 | cut -d '=' -f 7))
+output=$(awk "BEGIN {printf \"%.2f\",$output/10}")
+echo "    \"BLOCK\": $output,"
+output=$(expr $(echo $softirqs2 | cut -d '=' -f 8) - $(echo $softirqs1 | cut -d '=' -f 8))
+output=$(awk "BEGIN {printf \"%.2f\",$output/10}")
+echo "    \"BLOCK_IOPOLL\": $output,"
+output=$(expr $(echo $softirqs2 | cut -d '=' -f 9) - $(echo $softirqs1 | cut -d '=' -f 9))
+output=$(awk "BEGIN {printf \"%.2f\",$output/10}")
+echo "    \"TASKLET\": $output,"
+output=$(expr $(echo $softirqs2 | cut -d '=' -f 10) - $(echo $softirqs1 | cut -d '=' -f 10))
+output=$(awk "BEGIN {printf \"%.2f\",$output/10}")
+echo "    \"SCHED\": $output,"
+output=$(expr $(echo $softirqs2 | cut -d '=' -f 11) - $(echo $softirqs1 | cut -d '=' -f 11))
+output=$(awk "BEGIN {printf \"%.2f\",$output/10}")
+echo "    \"HRTIMER\": $output,"
+output=$(expr $(echo $softirqs2 | cut -d '=' -f 12) - $(echo $softirqs1 | cut -d '=' -f 12))
+output=$(awk "BEGIN {printf \"%.2f\",$output/10}")
+echo "    \"RCU\": $output"
+
+echo "  }"
+
+IFS=$OLDIFS
+
+unset cpu user nice system idle iowait irq sirq OLDIFS b
+
 echo "\"traffic\": ["
+IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%s=%s=%s ", $1, a[1], a[9], a[4]) }'`
 
 b="0"
 for entry in $IFACES; do
@@ -181,7 +226,7 @@ if which batctl >/dev/null; then
         IFS="
 "
         
-        BAT_O_WIFI=`batctl o | grep -E "$ADHOC_WIFI" | awk '/O/ {next} /B/ {next} {print}'`
+        BAT_O_WIFI=`batctl o | awk '/O/ {next} /B/ {next} {print}'  | grep -E "$ADHOC_WIFI"`
         echo "\"batman:wifi:originators\": ["
         b="0"
         
@@ -215,7 +260,7 @@ if which batctl >/dev/null; then
 
         echo "  ],"
         
-        BAT_O_ETH=`batctl o | grep -E "$ADHOC_ETH" | awk '/O/ {next} /B/ {next} {print}'`
+        BAT_O_ETH=`batctl o | awk '/O/ {next} /B/ {next} {print}' | grep -E "$ADHOC_ETH"`
         echo "\"batman:eth:originators\": ["
         b="0"
         
@@ -282,7 +327,10 @@ if which batctl >/dev/null; then
             echo "  \"mgmt_rx\": $row,"
         elif [ $i == 10 ]; then
             echo "  \"mgmt_rx_bytes\": $row"
+        elif [ $i == 11 ]; then
+            break
         fi
+        
         i=$(($i + 1))
     done
     echo "  },"
