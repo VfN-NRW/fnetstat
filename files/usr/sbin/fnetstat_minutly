@@ -3,6 +3,18 @@
 # Update from Wermelskirchen by RubenKelevra 2012-2015 - cyrond@gmail.com
 # Lizenz: GPL / AGPL 3.0
 
+OLDIFS=$IFS
+IFS='\n'
+#fetch cpu-usage at first:
+cpuusage1=$(cat /proc/stat)
+sleep 10
+cpuusage2=$(cat /proc/stat)
+
+#reduce cpuusage stats
+cpuusage1=$(echo $cpuusage1 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
+cpuusage2=$(echo $cpuusage2 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
+IFS=$OLDIFS
+
 MESH_BR="br-l2mesh"
 ADHOC_WIFI="wlan0|wlan1" #more then one with "a|b"
 ADHOC_ETH="br-wan" #more then one with "a|b"
@@ -12,13 +24,16 @@ CLIENT_WIFI="wlan0-1|wlan1-1" #more then one with "a|b"
 BRCTL="/bin/brctl_ff"
 WORK_FOLDER="/tmp/"
 BASIC_FILENAME="fnetstat"
+VAR_FILE="$WORK_FOLDER$BASIC_FILENAME"
 
 #import variables
-source "$WORK_FOLDER$BASIC_FILENAME"
+if [ -f "$VAR_FILE" ]; then
+    source "$VAR_FILE"
+fi
 
 #check if unique boot-hash has been generated
-if [ -z $BootID ]; then
-    BootID=$(head -1 /dev/urandom | md5sum | awk '{ print $1 }')
+if [ -z $_BootID ]; then
+    _BootID=$(head -1 /dev/urandom | md5sum | awk '{ print $1 }')
 fi
 
 echo "{"
@@ -29,7 +44,7 @@ echo "\"type\": \"minutly\","
 output=`cat /proc/sys/kernel/hostname`
 echo "\"sys:hostname\": \"$output\","
 #unique boot-hash 
-output=`echo $BootID`
+output=`echo $_BootID`
 echo "\"sys:boot_id\": \"$output\","
 #IPv6 Adresse Global
 output=`ifconfig $MESH_BR | grep Scope:Global | awk '{ print $3 }' | sed -e 's/\/64//g'`
@@ -73,166 +88,226 @@ output=`cat /proc/loadavg | awk '{ print $4 }'`
 echo "\"sys:processes\": \"$output\","
 output=`cat /proc/loadavg | awk '{ print $1 }'`
 echo "\"sys:loadavg\": $output,"
-output=`top -bn1 | grep ^CPU | awk '{ print $2,$4,$6,$8,$10,$12,$14 }' | sed 's/% /,/g' | sed 's/%//'`
-echo "\"sys:cpuusage\": \"$output\","
+
+echo "\"sys:cpuusage\": ["
+OLDIFS=$IFS
+IFS='\n'
+b="0"
+for entry in "$cpuusage1"; do
+    if [ "$b" -eq "1" ]; then
+        echo ","
+    else
+        b="1"
+    fi
+
+    echo -en "  {"
+    cpu=$(echo $entry | cut -d '=' -f 1)
+    echo " \"cpu\": \"$cpu\","
+
+    user=$(expr $(echo $cpuusage2 | grep "$cpu" | cut -d '=' -f 2) - $(echo $entry | cut -d '=' -f 2))
+    nice=$(expr $(echo $cpuusage2 | grep "$cpu" | cut -d '=' -f 3) - $(echo $entry | cut -d '=' -f 3))
+    system=$(expr $(echo $cpuusage2 | grep "$cpu" | cut -d '=' -f 4) - $(echo $entry | cut -d '=' -f 4))
+    idle=$(expr $(echo $cpuusage2 | grep "$cpu" | cut -d '=' -f 5) - $(echo $entry | cut -d '=' -f 5))
+    iowait=$(expr $(echo $cpuusage2 | grep "$cpu" | cut -d '=' -f 6) - $(echo $entry | cut -d '=' -f 6))
+    irq=$(expr $(echo $cpuusage2 | grep "$cpu" | cut -d '=' -f 7) - $(echo $entry | cut -d '=' -f 7))
+    sirq=$(expr $(echo $cpuusage2 | grep "$cpu" | cut -d '=' -f 8) - $(echo $entry | cut -d '=' -f 8))
+    
+    total=$(expr $user + $nice + $system + $idle + $iowait + $irq + $sirq)
+    
+    user=$(awk "BEGIN {printf \"%.2f\",$user/($total/100)}")
+    nice=$(awk "BEGIN {printf \"%.2f\",$nice/($total/100)}")
+    system=$(awk "BEGIN {printf \"%.2f\",$system/($total/100)}")
+    idle=$(awk "BEGIN {printf \"%.2f\",$idle/($total/100)}")
+    iowait=$(awk "BEGIN {printf \"%.2f\",$iowait/($total/100)}")
+    irq=$(awk "BEGIN {printf \"%.2f\",$irq/($total/100)}")
+    sirq=$(awk "BEGIN {printf \"%.2f\",$sirq/($total/100)}")
+    
+    echo "    \"user\": $user,"
+    echo "    \"nice\": $nice,"
+    echo "    \"system\": $system"
+    echo "    \"idle\": $idle"
+    echo "    \"iowait\": $iowait"
+    echo "    \"irq\": $irq"
+    echo "    \"sirq\": $sirq"
+    
+    echo -en "  }"
+done
+
+unset cpu user nice system idle iowait irq sirq
+
+if [ $b -eq "1" ]; then
+    echo ""
+fi
+
+echo "  ],"
+
+IFS=$OLDIFS
 
 IFACES=`cat /proc/net/dev | awk -F: '!/\|/ { gsub(/[[:space:]]*/, "", $1); split($2, a, " "); printf("%s=%s=%s=%s ", $1, a[1], a[9], a[4]) }'`
 echo "\"traffic\": ["
 
 b="0"
 for entry in $IFACES; do
-	if [ $b -eq "1" ]; then
-		echo ","
-	else
-		b="1"
-	fi
-	
-	echo -en "  {"
-	iface=`echo $entry | cut -d '=' -f 1`
-	echo " \"interface\": \"$iface\","
-	rx=`echo $entry | cut -d '=' -f 2`
-	echo "    \"rx\": $rx,"
-	tx=`echo $entry | cut -d '=' -f 3`
-	echo "    \"tx\": $tx,"
-	drop=`echo $entry | cut -d '=' -f 4`
-	echo "    \"drop\": $drop"
-	echo -en "  }"
+    if [ $b -eq "1" ]; then
+        echo ","
+    else
+        b="1"
+    fi
+    
+    echo -en "  {"
+    output=`echo $entry | cut -d '=' -f 1`
+    echo " \"interface\": \"$output\","
+    output=`echo $entry | cut -d '=' -f 2`
+    echo "    \"rx\": $output,"
+    output=`echo $entry | cut -d '=' -f 3`
+    echo "    \"tx\": $output,"
+    output=`echo $entry | cut -d '=' -f 4`
+    echo "    \"drop\": $output"
+    echo -en "  }"
 done
 
 if [ $b -eq "1" ]; then
-	echo ""
+    echo ""
 fi
 
 echo "  ],"
 
+unset b entry
+
 #B.A.T.M.A.N. advanced
 if which batctl >/dev/null; then
-	if [ "$(batctl o | grep 'No batman nodes in range')" == "" ]; then
-		OLDIFS=$IFS
-		IFS="
+    if [ "$(batctl o | grep 'No batman nodes in range')" == "" ]; then
+        OLDIFS=$IFS
+        IFS="
 "
-		
-		BAT_O_WIFI=`batctl o | grep -E "$ADHOC_WIFI" | awk '/O/ {next} /B/ {next} {print}'`
-		echo "\"batman:wifi:originators\": ["
-		b="0"
-		
-		for row in $BAT_O_WIFI; do
-			originator=`echo $row | awk '{print $1}'`
-			next_hop=`echo $row | awk '{print $4}'`
-			last_seen=`echo $row | awk '{print $2}'`
-			last_seen="${last_seen//s/}"
-			link_quality=`echo $row | awk '{print $3}'`
-			link_quality="${link_quality//(/}"
-			link_quality="${link_quality//)/}"
-			
-			if [ "$next_hop" == "$originator" ]; then
-				if [ $b -eq "1" ]; then
-					echo ","
-				else
-					b="1"
-				fi
-				echo -en "  {"
-				echo " \"originator\": \"$originator\","
-				echo "    \"last_seen\": \"$last_seen\","
-				echo "    \"linkquality\": \"$link_quality\","
-				echo -en "  }"
-			fi
-		done
-		unset BAT_O_WIFI
-		
-		if [ $b -eq "1" ]; then
-			echo ""
-		fi
+        
+        BAT_O_WIFI=`batctl o | grep -E "$ADHOC_WIFI" | awk '/O/ {next} /B/ {next} {print}'`
+        echo "\"batman:wifi:originators\": ["
+        b="0"
+        
+        for row in $BAT_O_WIFI; do
+            originator=`echo $row | awk '{print $1}'`
+            next_hop=`echo $row | awk '{print $4}'`
+            last_seen=`echo $row | awk '{print $2}'`
+            last_seen="${last_seen//s/}"
+            link_quality=`echo $row | awk '{print $3}'`
+            link_quality="${link_quality//(/}"
+            link_quality="${link_quality//)/}"
+            
+            if [ "$next_hop" == "$originator" ]; then
+                if [ $b -eq "1" ]; then
+                    echo ","
+                else
+                    b="1"
+                fi
+                echo -en "  {"
+                echo " \"originator\": \"$originator\","
+                echo "    \"last_seen\": \"$last_seen\","
+                echo "    \"linkquality\": \"$link_quality\","
+                echo -en "  }"
+            fi
+        done
+        unset BAT_O_WIFI
+        
+        if [ $b -eq "1" ]; then
+            echo ""
+        fi
 
-		echo "  ],"
-		
-		BAT_O_ETH=`batctl o | grep -E "$ADHOC_ETH" | awk '/O/ {next} /B/ {next} {print}'`
-		echo "\"batman:eth:originators\": ["
-		b="0"
-		
-		for row in $BAT_O_ETH; do
-			originator=`echo $row | awk '{print $1}'`
-			next_hop=`echo $row | awk '{print $4}'`
-			last_seen=`echo $row | awk '{print $2}'`
-			last_seen="${last_seen//s/}"
-			link_quality=`echo $row | awk '{print $3}'`
-			link_quality="${link_quality//(/}"
-			link_quality="${link_quality//)/}"
-			
-			if [ "$next_hop" == "$originator" ]; then
-				if [ $b -eq "1" ]; then
-					echo ","
-				else
-					b="1"
-				fi
-				echo -en "  {"
-				echo " \"originator\": \"$originator\","
-				echo "    \"last_seen\": \"$last_seen\","
-				echo "    \"linkquality\": \"$link_quality\","
-				echo -en "  }"
-			fi
-		done
-		unset BAT_O_ETH
-		
-		if [ $b -eq "1" ]; then
-			echo ""
-		fi
+        echo "  ],"
+        
+        BAT_O_ETH=`batctl o | grep -E "$ADHOC_ETH" | awk '/O/ {next} /B/ {next} {print}'`
+        echo "\"batman:eth:originators\": ["
+        b="0"
+        
+        for row in $BAT_O_ETH; do
+            originator=`echo $row | awk '{print $1}'`
+            next_hop=`echo $row | awk '{print $4}'`
+            last_seen=`echo $row | awk '{print $2}'`
+            last_seen="${last_seen//s/}"
+            link_quality=`echo $row | awk '{print $3}'`
+            link_quality="${link_quality//(/}"
+            link_quality="${link_quality//)/}"
+            
+            if [ "$next_hop" == "$originator" ]; then
+                if [ $b -eq "1" ]; then
+                    echo ","
+                else
+                    b="1"
+                fi
+                echo -en "  {"
+                echo " \"originator\": \"$originator\","
+                echo "    \"last_seen\": \"$last_seen\","
+                echo "    \"linkquality\": \"$link_quality\","
+                echo -en "  }"
+            fi
+        done
+        unset BAT_O_ETH
+        
+        if [ $b -eq "1" ]; then
+            echo ""
+        fi
 
-		echo "  ],"
-		
-		IFS=$OLDIFS
-	fi
-	
-	#batman-adv statistics
-	BATISTICS=`batctl s | awk '{ print $2 }'`
-	echo "\"batman:statistics\": {"
+        echo "  ],"
+        
+        IFS=$OLDIFS
+    fi
+    
+    unset OLDIFS originator last_seen link_quality
+    
+    #batman-adv statistics
+    BATISTICS=`batctl s | awk '{ print $2 }'`
+    echo "\"batman:statistics\": {"
 
-	i=0
-	for row in $BATISTICS; do	
-		if [ $i == "0" ]; then		
-			echo "  \"tx\": \"$row\","
-		elif [ $i == 1 ]; then
-			echo "  \"tx_bytes\": $row,"
-		elif [ $i == 2 ]; then
-			echo "  \"tx_dropped\": $row,"
-		elif [ $i == 3 ]; then
-			echo "  \"rx\": $row,"
-		elif [ $i == 4 ]; then
-			echo "  \"rx_bytes\": $row,"
-		elif [ $i == 5 ]; then
-			echo "  \"forward\": $row,"
-		elif [ $i == 6 ]; then
-			echo "  \"forward_bytes\": $row,"
-		elif [ $i == 7 ]; then
-			echo "  \"mgmt_tx\": $row,"
-		elif [ $i == 8 ]; then
-			echo "  \"mgmt_tx_bytes\": $row,"
-		elif [ $i == 9 ]; then
-			echo "  \"mgmt_rx\": $row,"
-		elif [ $i == 10 ]; then
-			echo "  \"mgmt_rx_bytes\": $row"
-		fi
-		i=$(($i + 1))
-	done
-	echo "  },"
+    i=0
+    for row in $BATISTICS; do    
+        if [ $i == "0" ]; then        
+            echo "  \"tx\": \"$row\","
+        elif [ $i == 1 ]; then
+            echo "  \"tx_bytes\": $row,"
+        elif [ $i == 2 ]; then
+            echo "  \"tx_dropped\": $row,"
+        elif [ $i == 3 ]; then
+            echo "  \"rx\": $row,"
+        elif [ $i == 4 ]; then
+            echo "  \"rx_bytes\": $row,"
+        elif [ $i == 5 ]; then
+            echo "  \"forward\": $row,"
+        elif [ $i == 6 ]; then
+            echo "  \"forward_bytes\": $row,"
+        elif [ $i == 7 ]; then
+            echo "  \"mgmt_tx\": $row,"
+        elif [ $i == 8 ]; then
+            echo "  \"mgmt_tx_bytes\": $row,"
+        elif [ $i == 9 ]; then
+            echo "  \"mgmt_rx\": $row,"
+        elif [ $i == 10 ]; then
+            echo "  \"mgmt_rx_bytes\": $row"
+        fi
+        i=$(($i + 1))
+    done
+    echo "  },"
+    unset row BATISTICS
 fi
 
 if which $BRCTL >/dev/null; then
 
-	#CLIENTS
-	SEDDEV=`$BRCTL showstp $MESH_BR | egrep '\([0-9]\)' | sed -e "s/(//;s/)//" | awk '{ print "s/^  "$2"/"$1"/;" }'`
-		
-	CLIENT_MACS=$CLIENT_MACS`$BRCTL showmacs $MESH_BR | sed -e "$SEDDEV" | awk '{if ($3 != "yes" && $1 == "'"$entry"'") print $2}'`" "
+    #CLIENTS
+    SEDDEV=`$BRCTL showstp $MESH_BR | egrep '\([0-9]\)' | sed -e "s/(//;s/)//" | awk '{ print "s/^  "$2"/"$1"/;" }'`
+        
+    CLIENT_MACS=$CLIENT_MACS`$BRCTL showmacs $MESH_BR | sed -e "$SEDDEV" | awk '{if ($3 != "yes" && $1 == "'"$entry"'") print $2}'`" "
 
-						
-	output=0
-	for client in $CLIENT_MACS; do
-		output=`expr $i + 1`
-	done
-	echo "\"ap:clients\": $output"
+                        
+    output=0
+    for client in $CLIENT_MACS; do
+        output=`expr $i + 1`
+    done
+    unset CLIENT_MACS SEDDEV
+    echo "\"ap:clients\": $output"
 
 else
-	echo "\"ap:clients\": -1"
+    echo "\"ap:clients\": -1"
 fi
 
 echo "}"
+
+echo "_BootID=$_BootID" > "$VAR_FILE"
