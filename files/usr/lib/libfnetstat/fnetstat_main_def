@@ -1,0 +1,19 @@
+#!/bin/sh
+# RubenKelevra 2012-2015 - <ruben@freifunk-nrw.de>
+# Lizenz: AGPL 3.0
+
+FunctionFn="/usr/lib/libfnetstat/fnetstat"
+BRCTL="/bin/brctl_ff"
+WorkFolder="/tmp"
+StorageFn="$WorkFolder/fnetstat.store"
+
+
+###
+
+MESH_BR="br-l2mesh"
+ADHOC_WIFI="wlan0|wlan1" #more then one with "a|b"
+ADHOC_ETH="br-wan" #more then one with "a|b"
+WAN_BR="br-wan"
+PING_TEST_IP4="8.8.8.8"
+PING_TEST_IP6="2001:4860:4860::8888"
+#CLIENT_WIFI="wlan0-1|wlan1-1" #more then one with "a|b"

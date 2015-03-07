@@ -79,3 +79,17 @@ output=`uname -r`
 echo "\"sys:kernel_version\": \"$output\","
 
 echo "}"
+
+
+
+### FIXME add this ones:
+
+#IPv6 Adresse Global
+output=`ifconfig $MESH_BR | grep Scope:Global | awk '{ print $3 }' | sed -e 's/\/64//g'`
+echo "\"sys:ip6:global\": \"$output\","
+#IPv6 Adresse Link
+output=`ifconfig $MESH_BR | grep Scope:Link | awk '{ print $3 }' | sed -e 's/\/64//g'`
+echo "\"sys:ip6:link\": \"$output\","
+
+
+### / FIXME
