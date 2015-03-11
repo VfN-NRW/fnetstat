@@ -2,14 +2,15 @@
 # Netmon Nodewatcher (C) 2010-2011 Freifunk Oldenburg
 # Update from Wermelskirchen by RubenKelevra 2012-2015 - <ruben@freifunk-nrw.de>
 # Lizenz: GPL / AGPL 3.0
+
 OLDIFS=$IFS
 IFS='\n'
+
 _loadavg_from_start=$(cat /proc/loadavg)
 _stat_from_start=$(cat /proc/stat)
 
-source /usr/lib/fnetstat_main_def || exit 1
+source /usr/lib/libfnetstat/fnetstat_main_def || exit 1
 source "$FunctionFn" || exit 1
-
 
 ### old stuff ###
 OLDIFS=$IFS
@@ -19,16 +20,18 @@ cpuusage1=$(cat /proc/stat)
 sleep 10
 cpuusage2=$(cat /proc/stat)
 
-
 #reduce stats
 softirqs1=$(echo $cpuusage1 | grep "softirq" | tr ' ' '=')
 softirqs2=$(echo $cpuusage2 | grep "softirq" | tr ' ' '=')
 cpuusage1=$(echo $cpuusage1 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
 cpuusage2=$(echo $cpuusage2 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
-
 ### / old stuff ###
 
-print_stat_header
+cur_stat_fn=$(gen_cur_fn)
+
+set_print_to_file "$cur_stat_fn"
+
+print_stat_header                 
 print_hostname "as json"
 print_bootid "as json"
 print_wan_ip4 "as json"
