@@ -29,7 +29,7 @@ cpuusage2=$(echo $cpuusage2 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
 
 cur_stat_fn=$(gen_cur_stat_fn)
 
-set_print_to_file "$cur_stat_fn"
+set_print_fn "$cur_stat_fn"
 
 print_stat_header                 
 print_hostname "as json"

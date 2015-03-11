@@ -4,7 +4,7 @@
 
 _print_filename=""
 
-function set_print_to_file() {
+function set_print_fn() {
     _print_filename="$1"
 }
 
