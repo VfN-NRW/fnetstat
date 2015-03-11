@@ -27,7 +27,7 @@ cpuusage1=$(echo $cpuusage1 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
 cpuusage2=$(echo $cpuusage2 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
 ### / old stuff ###
 
-cur_stat_fn=$(gen_cur_fn)
+cur_stat_fn=$(gen_cur_stat_fn)
 
 set_print_to_file "$cur_stat_fn"
 
