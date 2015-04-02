@@ -2,9 +2,6 @@
 # RubenKelevra 2012-2015 - <ruben@freifunk-nrw.de>
 # Lizenz: AGPL 3.0
 
-function get_hostname() {
-    cat /proc/sys/kernel/hostname
-}
 function get_uptime() {
     cat /proc/uptime | awk '{ print $1 }'
 }
