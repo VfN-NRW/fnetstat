@@ -9,21 +9,21 @@ FIRSTLISTELEMENT=-1
 
 ### Root functions ###
 function json_open() {
-    echo "{"
+    echo '{'
     LINEENDPRINTED=1
 }
 function json_close() {
-    [ $LINEENDPRINTED -eq 0 ] && echo ""
-    echo "}"
+    [ "$LINEENDPRINTED" -eq '0' ] && echo ''
+    echo '}'
     LINEENDPRINTED=1
 }
 
 function _json_next_element() {
-    [ $LINEENDPRINTED -eq 0 ] && echo ","
+    [ "$LINEENDPRINTED" -eq '0' ] && echo ','
     LINEENDPRINTED=1
 }
 function _json_do_indent() {
-    [ $ARRAYOPEN -eq 1 ] && echo -ne "  "
+    [ "$ARRAYOPEN" -eq '1' ] && echo -ne '  '
 }
 
 ### Single functions ###
@@ -46,13 +46,13 @@ function json_add_dec() {
 function json_array_open() {
     local array_key="$1"
     _json_next_element
-    echo "\"$array_key\": {" 
+    echo "\"$array_key\": {"
     ARRAYOPEN=1
     LINEENDPRINTED=1
 }
 function json_array_close() {
-    [ $LINEENDPRINTED -eq 0 ] && echo ""
-    echo -ne "  }"
+    [ "$LINEENDPRINTED" -eq '0' ] && echo ''
+    echo -ne '  }'
     ARRAYOPEN=0
     LINEENDPRINTED=0
 }
