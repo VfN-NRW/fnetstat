@@ -60,6 +60,7 @@ if [ $PRINTHELP -eq 1 ]; then
 	echo " Use UCI for further configurations or edit /etc/config/fnetstat."
 	echo ""
 	echo " This program is copyrighted under AGPL 3.0"
+	echo " see https://github.com/vfn-nrw/fnetstat for more information & licence"
 	echo ""
 	exit 0
 fi
@@ -80,12 +81,12 @@ if which uci get $UCI_ULDIFF >/dev/null; then
 	fi
 fi
 
-if ! [ -f $WORK_FOLDER$BASIC_FILENAME ]; then 
+if ! [ -f $WORK_FOLDER$BASIC_FILENAME ]; then
 	echo "Debug: random unique boot-hash hasn't been generated, we're running first time after boot"
 	FIRST_RUN_AFTER_BOOT=1
 fi
 
-if [ $ULDIFF -eq -1 -o $FORCE_ULDIFF_UPDATE -eq 1 ]; then #we randomly generate a diff 
+if [ $ULDIFF -eq -1 -o $FORCE_ULDIFF_UPDATE -eq 1 ]; then #we randomly generate a diff
 	echo "Debug: generating upload-diff..."
 # elif #fixme check maximal diff to 60/x where x is uploads per hour
 fi
