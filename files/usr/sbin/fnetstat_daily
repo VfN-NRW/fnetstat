@@ -2,9 +2,8 @@
 # Netmon Nodewatcher (C) 2010-2011 Freifunk Oldenburg
 # Update from Wermelskirchen by RubenKelevra 2012-2015 - cyrond@gmail.com
 # Lizenz: GPL / AGPL 3.0
-MESH_INTERFACE="br-freifunk"
-ADHOC_INTERFACE="wlan0-1"
-CLIENT_INTERFACE="wlan0"
+ADHOC_INTERFACE="mesh0"
+CLIENT_INTERFACE="client0"
 BRCTL="/bin/brctl_ff"
 WORK_FOLDER="/tmp/"
 BASIC_FILENAME="fnetstat"
@@ -16,8 +15,8 @@ fi
 
 echo "{"
 
-echo "\"sys:script\": \"v0.5\","
-echo "\"type\": \"daily\","
+echo "\"sys:script\": \"v0.7a\","
+echo "\"type\": \"info\","
 #hostnamen ausgeben
 output=`cat /proc/sys/kernel/hostname`
 echo "\"sys:hostname\": \"$output\","
@@ -34,7 +33,7 @@ echo "\"ap:mac\": \"$output\","
 output=`ifconfig eth0 | grep 'HWaddr' | sed "s/^[ ]*//" | awk '{ print $5}' | sed 's/://g'`
 echo "\"sys:hwid\": \"$output\","
 output=""
-[ $(uci get fastd.ffmesh.secret) != 'generate' ] && output=$(/etc/init.d/fastd show_key ffmesh)
+[ $(uci get fastd.mesh_vpn.secret) != 'generate' ] && output=$(/etc/init.d/fastd show_key mesh_vpn)
 echo "\"fastd:pubkey\": \"$output\","
 
 #uci lat/lon
