@@ -38,14 +38,14 @@ echo "\"fastd:pubkey\": \"$output\","
 
 #uci lat/lon
 
-if which uci get system.@system[0].lat >/dev/null; then
-	output=`uci get system.@system[0].lat`
+if which uci get gluon-node-info.@location[0].latitude >/dev/null; then
+	output=`uci get gluon-node-info.@location[0].latitude`
 else
 	output=""
 fi
 echo "\"sys:lat\": \"$output\","
-if which uci get system.@system[0].lon >/dev/null; then
-	output=`uci get system.@system[0].lon`
+if which uci get gluon-node-info.@location[0].latitude >/dev/null; then
+	output=`uci get gluon-node-info.@location[0].latitude`
 else
 	output=""
 fi
@@ -53,8 +53,12 @@ echo "\"sys:lon\": \"$output\","
 
 
 #Mailkontaktadresse
-output=`uci get system.@system[0].contact_mail`
-echo "\"ap:contact:mail\": \"$output\","
+output=`uci get gluon-node-info.@owner[0].contact`
+echo "\"ap:mail:owner\": \"$output\","
+
+#Mailkontaktadresse
+output=`uci get gluon-node-info.@advisor[0].contact`
+echo "\"ap:mail:advisor\": \"$output\","
 
 #sysinfo hardware
 output=`grep -m 1 "cpu model" /proc/cpuinfo | cut -d ":" -f 2`
