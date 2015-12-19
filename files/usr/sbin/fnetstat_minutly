@@ -17,12 +17,12 @@ cpuusage1=$(echo $cpuusage1 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
 cpuusage2=$(echo $cpuusage2 | grep ^cpu | grep -v "^cpu " | tr ' ' '=')
 IFS=$OLDIFS
 
-MESH_BR="br-l2mesh"
-ADHOC_WIFI="wlan0|wlan1" #more then one with "a|b"
+MESH_BR="br-client"
+ADHOC_WIFI="mesh0|mesh1" #more then one with "a|b"
 ADHOC_ETH="br-wan" #more then one with "a|b"
 WAN_BR="br-wan"
 #not in use
-CLIENT_WIFI="wlan0-1|wlan1-1" #more then one with "a|b"
+CLIENT_WIFI="client0|client1" #more then one with "a|b"
 BRCTL="/bin/brctl_ff"
 WORK_FOLDER="/tmp/"
 BASIC_FILENAME="fnetstat"
